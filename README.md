@@ -2,7 +2,7 @@
 
 **A business analytics case study on flagging high-risk loan applicants while limiting the number of good customers turned away.**
 
-*MSc Business Analytics with AI · Python, TensorFlow/Keras, scikit-learn, pandas*
+* Python, TensorFlow/Keras, scikit-learn, pandas*
 
 ---
 
