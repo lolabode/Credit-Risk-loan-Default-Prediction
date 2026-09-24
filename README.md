@@ -16,7 +16,7 @@
 | **Outcome** | The selected model caught **64% of defaulters** in unseen data (198 of 309) with an AUC of **0.74** |
 | **Key insight** | The more complex model beat a simple baseline by only a small margin. Complexity bought very little, which matters when a lender must also explain its decisions |
 
-![Business outcomes](business_outcomes.png)
+![Business outcomes](images/business_outcomes.png)
 
 ---
 
@@ -61,7 +61,7 @@ The best model was chosen on the validation set and then confirmed on the untouc
 
 ## 4. Results
 
-![Model comparison](model_comparison.png)
+![Model comparison](images/model_comparison.png)
 
 | Config | Accuracy | Precision | Recall | F1 | AUC |
 |---|---|---|---|---|---|
@@ -86,8 +86,8 @@ In other words, it is useful as an **early-warning screen that routes applicants
 <details>
 <summary>Supporting charts: ROC curve and training behaviour</summary>
 
-![ROC curve](roc_curve_config5.png)
-![Loss curve](loss_curve_config5.png)
+![ROC curve](images/roc_curve_config5.png)
+![Loss curve](images/loss_curve_config5.png)
 
 The training and validation curves stay close together, indicating the model generalises rather than memorising the training data.
 </details>
@@ -121,10 +121,10 @@ The training and validation curves stay close together, indicating the model gen
 
 ---
 
-
 ## Tools
 
 Python · pandas · NumPy · scikit-learn · TensorFlow/Keras · Matplotlib · Jupyter
 
 ---
 
+*Completed as part of an MSc in Business Analytics with AI. AI tools supported coding and debugging; all modelling decisions and interpretations are my own.*
