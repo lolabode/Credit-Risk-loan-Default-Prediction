@@ -121,17 +121,6 @@ The training and validation curves stay close together, indicating the model gen
 
 ---
 
-## Repository contents
-
-```
-├── README.md                  ← this case study
-├── notebooks/
-│   └── loan_default_prediction.ipynb   ← full analysis and code
-├── images/                    ← charts used above
-└── requirements.txt
-```
-
-**To run:** install the packages in `requirements.txt`, place `simulated_loan_default_10000.csv` in the `notebooks/` folder, and run the notebook top to bottom.
 
 ## Tools
 
@@ -139,4 +128,3 @@ Python · pandas · NumPy · scikit-learn · TensorFlow/Keras · Matplotlib · J
 
 ---
 
-*Completed as part of an MSc in Business Analytics with AI. AI tools were used to support coding and debugging; all modelling decisions and interpretations are my own.*
