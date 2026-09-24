@@ -87,6 +87,7 @@ In other words, it is useful as an **early-warning screen that routes applicants
 <summary>Supporting charts: ROC curve and training behaviour</summary>
 
 ![ROC curve](roc_curve_config5.png)
+
 ![Loss curve](loss_curve_config5.png)
 
 The training and validation curves stay close together, indicating the model generalises rather than memorising the training data.
