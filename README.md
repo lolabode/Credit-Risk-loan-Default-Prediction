@@ -83,8 +83,8 @@ The best model was chosen on the validation set and then confirmed on the untouc
 
 In other words, it is useful as an **early-warning screen that routes applicants to further review**, not as an automatic approve/reject decision.
 
-<details>
-<summary>Supporting charts: ROC curve and training behaviour</summary>
+
+**Supporting charts: ROC curve and training behaviour**
 
 ![ROC curve](roc_curve_config5.png)
 
