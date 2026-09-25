@@ -1,22 +1,26 @@
-# Credit Risk: Predicting Loan Default with Neural Networks
+# Credit Risk: Reducing Lending Losses with Default Prediction
 
-**A business analytics case study on flagging high-risk loan applicants while limiting the number of good customers turned away.**
+**A business analytics case study: using predictive modelling to decide which loan applicants to flag for review, and where to set the cut-off.**
 
-*Python · TensorFlow/Keras · scikit-learn · pandas*
+*Python · pandas · scikit-learn · TensorFlow/Keras*
 
 ---
 
-## At a glance
+## Key outcomes
 
-| | |
-|---|---|
-| **Business question** | Can a lender identify applicants likely to default before approving a loan? |
-| **Data** | 10,000 simulated borrower records, 23 financial and behavioural attributes, 20.6% defaulters |
-| **Approach** | Seven neural network configurations compared through controlled, one-change-at-a-time experiments |
-| **Outcome** | The selected model caught **64% of defaulters** in unseen data (198 of 309) with an AUC of **0.74** |
-| **Key insight** | The more complex model beat a simple baseline by only a small margin. Complexity bought very little, which matters when a lender must also explain its decisions |
+*Based on 10,000 simulated loan applications.*
 
-![Business outcomes](business_outcomes.png)
+- **Cut expected lending losses by an estimated 42%** compared with approving every applicant, from £3.60m to about £2.10m across 1,500 test applicants.
+- **Identified review capacity as the real business constraint:** beyond a certain point, flagging more applicants barely reduces losses but doubles the manual review workload.
+- **Recommended a simpler, explainable model,** which performed as well as a complex neural network while being easier to justify to customers and regulators.
+
+![Threshold cost analysis](threshold_cost_analysis.png)
+
+---
+
+## Skills demonstrated
+
+**Cost-benefit analysis** · **Decision analysis and recommendations** · **Stakeholder-ready reporting** · **Process design** · **Predictive modelling** · **Data preparation** · **Sensitivity analysis** · **Python (pandas, scikit-learn)**
 
 ---
 
@@ -24,108 +28,130 @@
 
 Lenders face two kinds of mistake, and they are not equally costly:
 
-- **Approving a borrower who defaults** (a false negative) causes a direct loss of the unpaid loan balance.
-- **Rejecting a borrower who would have repaid** (a false positive) loses the interest income and the customer relationship.
+- **Approving a borrower who defaults** causes a direct loss of the unpaid loan balance.
+- **Flagging a borrower who would have repaid** loses the interest income and risks losing the customer.
 
-Missing a defaulter is usually far more expensive, so the project was designed to **maximise the share of defaulters caught (recall)** while keeping false alarms at a reasonable level. Because only about 1 in 5 applicants defaults, overall accuracy is misleading here: a model that approves everyone would be 79% "accurate" and useless. Success was therefore measured on **recall, F1-score and AUC**.
+In this data, a missed default costs on average **about six times more** than wrongly flagging a good customer (£12,392 vs £1,975). The goal was therefore to build a model that catches as many defaulters as possible, and then to decide **where to draw the line** so that total expected cost is as low as possible while keeping the review workload realistic.
 
 ## 2. The data
 
-The dataset contains 10,000 simulated loan applications with no missing values. Features cover:
+10,000 simulated loan applications with no missing values, of which 20.6% defaulted. Features cover:
 
 - **Loan details:** amount, term, interest rate, purpose, credit sub-grade
 - **Borrower profile:** annual income, employment length, home ownership, verification status, state
 - **Credit behaviour:** FICO score, debt-to-income ratio, credit utilisation, recent enquiries, delinquencies and public records
 
-The target is binary: `1` = defaulted, `0` = repaid (7,940 repaid vs 2,060 defaulted).
-
-> **Note:** The data is simulated for learning purposes. Results show the method and reasoning, not real-world lending performance.
+> **Note:** The data is simulated and follows US lending conventions (e.g. FICO scores). Recommendations are framed for a UK lender. Results show the method and reasoning, not real-world lending performance.
 
 ## 3. Approach
 
-**Preparation.** Borrower IDs were dropped, the issue date was split into year and month to capture timing effects, `grade` was removed because `sub_grade` holds the same information in more detail, categorical fields were one-hot encoded, and numeric fields were standardised. Data was split **70% training / 15% validation / 15% test**, and **class weights** were applied so the model didn't simply learn to predict "no default".
+1. **Prepared the data:** removed identifiers, split the issue date into year and month, removed the redundant `grade` field, encoded categories and standardised numeric fields.
+2. **Split the data** into 70% training, 15% validation and 15% test, with class weights so the model didn't ignore the minority of defaulters.
+3. **Compared seven neural network designs**, changing one thing at a time to see what actually improved results.
+4. **Benchmarked against logistic regression** to test whether the added complexity was worth it.
+5. **Built a cost model** using each applicant's own loan amount, interest rate and term, and chose the decision cut-off on the validation set before confirming it on unseen test data.
 
-**Experiment design.** Rather than trial and error, each configuration changed one thing at a time so its effect could be isolated:
+**Cost assumptions** (stated openly so they can be challenged):
 
-| Config | Change tested |
+| Error | Assumed cost |
 |---|---|
-| 1 | Baseline: simple network, standard gradient descent (SGD), no regularisation |
-| 2 | + Momentum (faster training) |
-| 3 | Adam optimiser, no regularisation |
-| 4 | Adam + dropout + early stopping (overfitting controls) |
-| 5 | **Deeper network (4 hidden layers) + dropout + early stopping** |
-| 6 | Config 5 + L2 weight penalty |
-| 7 | Config 5 with a lower learning rate |
+| Missed defaulter | 60% of the loan amount is lost |
+| Good customer wrongly flagged | 50% of the loan's lifetime interest is lost as profit |
 
-The best model was chosen on the validation set and then confirmed on the untouched test set.
+## 4. Results: what each decision costs
 
-## 4. Results
+Every applicant receives a risk score between 0 and 1. The **cut-off** is the score above which an applicant is flagged for review: a lower cut-off flags more people.
+
+| Scenario | Expected cost | Defaulters caught | Applicants flagged for review |
+|---|---|---|---|
+| Approve everyone (no model) | £3.60m | 0 of 309 | 0% |
+| Model, standard cut-off (0.5) | £2.13m | 203 of 309 | 36% |
+| Model, cost-optimal cut-off (0.25) | £2.10m | 292 of 309 | 78% |
+
+**What this shows:**
+
+- **The model cuts expected losses by about 42%** compared with approving everyone.
+- **Expected cost is almost flat between cut-offs of 0.25 and 0.50.** The strict optimum saves only about 1.5% more than the standard cut-off, but more than doubles the number of applicants needing manual review.
+- **Above about 0.55, costs rise quickly** (£2.51m at 0.60) because too many defaulters are approved.
+- **Sensitivity check:** if 40% of a defaulted loan is lost, the saving versus approving everyone is 28%; at 80%, it is 55%. The model adds clear value in every scenario.
+
+## 5. Model comparison
 
 ![Model comparison](model_comparison.png)
 
-| Config | Accuracy | Precision | Recall | F1 | AUC |
+| Model | Recall | Precision | F1 | AUC |
+|---|---|---|---|---|
+| Neural network (best of seven designs) | 0.657 | 0.377 | 0.479 | 0.737 |
+| Logistic regression | 0.689 | 0.346 | 0.461 | 0.739 |
+
+*Test set of 1,500 applicants, standard cut-off of 0.5. Recall = share of defaulters caught; precision = share of flagged applicants who actually defaulted; AUC = overall ability to rank risky applicants above safe ones.*
+
+**What the seven neural network experiments showed:**
+
+1. **Faster training methods made things worse on their own.** Momentum and Adam caught fewer defaulters, with recall dropping as low as 35%, because the models favoured the majority "repaid" group.
+2. **Overfitting controls made the difference.** Dropout and early stopping recovered performance, and only then did a deeper network add value.
+3. **The deepest, most tuned network gained little over simpler options,** and logistic regression matched it.
+
+
+*Full results for all seven neural network designs*
+
+| Config | Change tested | Recall | Precision | F1 | AUC |
 |---|---|---|---|---|---|
-| 1 Baseline (SGD) | 0.697 | 0.364 | 0.634 | 0.463 | 0.722 |
-| 2 SGD + momentum | 0.681 | 0.318 | 0.482 | 0.384 | 0.662 |
-| 3 Adam | 0.716 | 0.324 | 0.350 | 0.336 | 0.645 |
-| 4 Adam + dropout + early stopping | 0.704 | 0.365 | 0.592 | 0.452 | 0.716 |
-| **5 Deeper + dropout + early stopping** | **0.703** | **0.372** | **0.641** | **0.471** | **0.740** |
-| 6 Deeper + L2 | 0.687 | 0.351 | 0.608 | 0.445 | 0.731 |
-| 7 Deeper, lower learning rate | 0.693 | 0.354 | 0.599 | 0.445 | 0.711 |
+| 1 | Baseline (standard gradient descent) | 0.634 | 0.364 | 0.463 | 0.722 |
+| 2 | + Momentum | 0.482 | 0.318 | 0.384 | 0.662 |
+| 3 | Adam optimiser | 0.350 | 0.324 | 0.336 | 0.645 |
+| 4 | Adam + dropout + early stopping | 0.592 | 0.365 | 0.452 | 0.716 |
+| 5 | **Deeper network + dropout + early stopping (selected)** | **0.641** | **0.372** | **0.471** | **0.740** |
+| 6 | Config 5 + L2 weight penalty | 0.608 | 0.351 | 0.445 | 0.731 |
+| 7 | Config 5 + lower learning rate | 0.599 | 0.354 | 0.445 | 0.711 |
 
-*Test set, 1,500 applicants, default threshold of 0.5.*
-
-**What the selected model (Config 5) means in practice:**
-
-- It caught **198 of 309 defaulters (64%)** and missed 111.
-- It flagged **334 of 1,191 good applicants (28%)** as risky.
-- Of everyone it flagged, roughly **1 in 3 actually defaulted** (precision 0.37).
-
-In other words, it is useful as an **early-warning screen that routes applicants to further review**, not as an automatic approve/reject decision.
-
-
-**Supporting charts: ROC curve and training behaviour**
+*Original experiment run. The cost analysis retrains Config 5 with fixed random seeds, giving very similar results (AUC 0.737 vs 0.740), which is normal for neural networks.*
 
 ![ROC curve](roc_curve_config5.png)
 
 ![Loss curve](loss_curve_config5.png)
 
-The training and validation curves stay close together, indicating the model generalises rather than memorising the training data.
 </details>
-
-## 5. Key insights
-
-1. **"Stronger" training methods made things worse on their own.** Momentum and Adam fit the training data faster but caught fewer defaulters, dropping recall to as low as 35%. The models learned to favour the majority "repaid" group.
-2. **Overfitting controls were what made the difference.** Dropout and early stopping recovered performance, and only then did a deeper network add value.
-3. **More regularisation hit diminishing returns.** Adding an L2 penalty or slowing learning reduced performance, suggesting Config 5 was already well balanced.
-4. **The gain over the simple baseline was small.** Config 5 improved recall from 0.634 to 0.641 and AUC from 0.722 to 0.740. For a lender, that small gain has to be weighed against the harder-to-explain model.
 
 ## 6. Recommendations
 
-- **Use the model as a triage tool.** Send flagged applicants to manual underwriting instead of rejecting them automatically.
-- **Set the decision threshold using business costs, not the default 0.5.** The right cut-off depends on the average loss from a default compared with the profit lost from a rejected good customer.
-- **Benchmark against an interpretable model before deployment.** Given how close the simple baseline came, a logistic regression or tree-based model may give similar results with clearer explanations, which matters under UK regulatory expectations such as the FCA's Consumer Duty.
+1. **Use the model as a triage tool, not an automatic decision-maker.** Route flagged applicants to manual underwriting rather than rejecting them outright.
+2. **Set the cut-off around 0.45–0.50 unless review capacity is large.** This keeps almost all of the financial benefit (about 41% lower expected losses than approving everyone) while flagging roughly 36–42% of applicants.
+3. **Never set the cut-off above about 0.55,** where losses rise quickly.
+4. **Deploy the logistic regression rather than the neural network.** It performs as well, and its decisions can be explained to applicants and regulators, which matters under UK expectations such as the FCA's Consumer Duty.
+5. **Revisit the cost assumptions with the finance team** before go-live, since the best cut-off depends on actual loss and profit figures.
 
-## 7. Limitations
+## 7. How this would work in practice
+
+1. **Application received:** the model scores each applicant's risk automatically.
+2. **Low-risk applicants** (score below the cut-off) continue through the standard approval process.
+3. **Flagged applicants** go to an underwriter for manual review, with the key risk factors shown.
+4. **Monthly monitoring:** track default rate, review workload, approval rate and expected loss, and adjust the cut-off if review capacity or loss figures change.
+
+**Stakeholders involved:** credit risk (owns the model and cut-off), underwriting (handles reviews), finance (validates cost assumptions), and compliance (checks the model is fair and explainable).
+
+## 8. Limitations
 
 - Simulated data, so results won't transfer directly to real lending.
-- All metrics use a fixed 0.5 threshold, which ignores the unequal cost of errors.
-- Neural networks are hard to explain to applicants and regulators. No explainability analysis was performed.
-- A single train/validation/test split; cross-validation would give more reliable estimates.
+- Cost figures rely on stated assumptions about loss given default and profit margin.
 
-## 8. Next steps
 
-- [ ] Cost-based threshold analysis to find the cut-off that minimises expected loss
-- [ ] Logistic regression and gradient-boosting benchmarks
+
+## 9. Next steps
+
+- [x] Cost-based threshold analysis
+- [x] Logistic regression benchmark
 - [ ] Feature importance / SHAP analysis to show which factors drive risk
-- [ ] Interactive dashboard showing the trade-off at different thresholds
+- [ ] Interactive dashboard showing the cost and workload trade-off at different cut-offs
 
 ---
 
-## Tools
+## Files
 
-Python · pandas · NumPy · scikit-learn · TensorFlow/Keras · Matplotlib · Jupyter
+- [`threshold_cost_analysis.ipynb`](threshold_cost_analysis.ipynb): cost model, cut-off analysis and logistic regression benchmark
+- [`loan_default_prediction.ipynb`](loan_default_prediction.ipynb): data preparation and the seven neural network experiments
 
 ---
 
 
+**Author:** [Felicia Oyebode] · [LinkedIn]([(https://www.linkedin.com/in/felicia-oyebode-587353197/)])
